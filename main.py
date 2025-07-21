@@ -145,14 +145,18 @@ class Army:
 
 
     
-    def draw_battle(self):
-        self.history.append("Defeat")
+    def draw_battle(self): # The older unit and the one with less power is removed
+        self.history.append("Draw")
         older_unit = None
         max_age = 0
         older_list = None
         for unit_list in self.units.values():
             for unit in unit_list:
                 if unit.age > max_age:
+                    max_age = unit.age
+                    older_unit = unit
+                    older_list = unit_list
+                elif unit.age == max_age and unit.power < older_unit.power:
                     max_age = unit.age
                     older_unit = unit
                     older_list = unit_list
