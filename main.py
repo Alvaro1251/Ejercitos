@@ -57,13 +57,15 @@ class Army:
     def __init__(self,civilization):
         self.gold = 1000
         self.civilization = civilization
-        self.historic = []
+        self.history = []
         self.units = self.setUnits()
-        self.plane_units = [unit for unit_list in self.units.values() for unit in unit_list]
-        self.power = self.getPower()
+    @property
+    def force(self):
+        return sum(unit.power for unit_list in self.units.values() for unit in unit_list)
+
 
     def __str__(self):
-        result = f"Army of {self.civilization} with {self.gold} gold.\n Units:\n"
+        result = f"Army of {self.civilization} with {self.gold} gold.\n Historic:{self.history} \n Units:\n"
         for unit_type, unit_list in self.units.items():
             result += f"  {unit_type} ({len(unit_list)}):\n"
             for unit in unit_list:
@@ -95,6 +97,7 @@ class Army:
             self.gold = self.gold - unit.training_cost
             unit.power = unit.power + unit.training_gain
 
+
     def transformUnit(self, unit):
         if unit.type != "Knight":
             if self.gold >= unit.transform_cost:
@@ -106,38 +109,54 @@ class Army:
                     self.units["Archers"].remove(unit)
                     self.units["Knights"].append(unit.transform())
 
-    def getPower(self):
-        return sum(unit.power for unit_list in self.units.values() for unit in unit_list)
-
+    
 
     def battle(self, enemy_army):
-        if self.power > enemy_army.power:
+        if self.force > enemy_army.force:
             self.win_battle()
-            self.historic.append("Victory against " + enemy_army.civilization)
             enemy_army.lose_battle()
-            enemy_army.historic.append("Defeat against " + enemy_army.civilization)
-        elif self.power < enemy_army.power:
+        elif self.force < enemy_army.force:
             self.lose_battle()
-            self.historic.append("Defeat against " + enemy_army.civilization)
             enemy_army.win_battle()
-            enemy_army.historic.append("Victory against " + self.civilization)
         else:
-            self.historic.append("Draw against " + enemy_army.civilization)
-            enemy_army.historic.append("Draw against " + self.civilization)
+            self.draw_battle()
+            enemy_army.draw_battle()    
         
     def win_battle(self):
         self.gold = self.gold + 100
+        self.history.append("Victory")
 
 
     def lose_battle(self):
-        
+        self.history.append("Defeat")
+        for i in range(2):
+            most_powerful_unit = None
+            max_power = 0
+            max_list = None
 
-        
+            for unit_list in self.units.values():
+                for unit in unit_list:
+                    if unit.power > max_power:
+                        max_power = unit.power
+                        most_powerful_unit = unit
+                        max_list = unit_list
 
+            max_list.remove(most_powerful_unit)
+
+
+    
     def draw_battle(self):
-        lost_unity = random.choice(self.units)
-        print(f"Lost unit: {lost_unity}")
-        self.units.remove(lost_unity)
+        self.history.append("Defeat")
+        older_unit = None
+        max_age = 0
+        older_list = None
+        for unit_list in self.units.values():
+            for unit in unit_list:
+                if unit.age > max_age:
+                    max_age = unit.age
+                    older_unit = unit
+                    older_list = unit_list
+        older_list.remove(older_unit)
 
 
 
@@ -145,19 +164,6 @@ class Army:
 
 
 
-
-
-army = Army("Chinese")
-print(army)
-x = army.units["Knights"][0]
-print(x)
-army.trainUnit(x)
-print(x)
-army.transformUnit(x)
-print(x)
-print(army)
-army.lose_battle()
-print(army)
                     
     
 
